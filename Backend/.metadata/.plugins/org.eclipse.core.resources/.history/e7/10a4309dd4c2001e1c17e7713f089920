@@ -1,0 +1,125 @@
+package com.fashion_point.Controller;
+
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fashion_point.Exception.OrderException;
+import com.fashion_point.ReqRes_pojos.ApiResponse;
+import com.fashion_point.ReqRes_pojos.PaymentLinkResponse;
+import com.fashion_point.pojos.OrderD;
+import com.fashion_point.repository.OrderRepository;
+import com.fashion_point.service.OrderService;
+import com.fashion_point.service.UserServiceInterface;
+import com.razorpay.Payment;
+import com.razorpay.PaymentLink;
+import com.razorpay.RazorpayClient;
+import com.razorpay.RazorpayException;
+
+import netscape.javascript.JSObject;
+
+@RestController
+@RequestMapping("/api")
+public class PaymentController {
+	
+	//this annotation is used to access the properties of application.properties
+	@Value("{razorpay.api.key}")
+	String apiKey;
+	
+	@Value("{razorpay.api.secret}")
+	String apiSecret;
+	
+	@Autowired
+	private OrderService orderService;
+	
+	@Autowired
+	private UserServiceInterface userService;
+	
+	@Autowired
+	private OrderRepository orderRepo;
+	
+	@PostMapping("/payments/{orderId}")
+	public ResponseEntity<PaymentLinkResponse> createPaymentLink(@PathVariable Long orderId, 
+			@RequestHeader("Authorization")String jwt)throws OrderException, RazorpayException{
+		OrderD order=orderService.findOrderById(orderId);
+		
+		try {
+			RazorpayClient razorpay=new RazorpayClient(apiKey, apiSecret);
+			
+			//create a Json object 
+			JSONObject paymentLinkReq= new JSONObject();
+			paymentLinkReq.put("amount", order.getTotalPrice()*100); //100 to change in rupees
+			paymentLinkReq.put("currency", "INR");
+			
+			//create other oblect for userInfo
+			JSONObject customer= new JSONObject();
+			customer.put("name",order.getUser().getFirstName());
+			customer.put("email",order.getUser().getEmail());
+			paymentLinkReq.put("customer", customer);
+			
+			//object for notify
+			JSONObject notify=new JSONObject();
+			notify.put("sms",true);
+			notify.put("email", true);
+			paymentLinkReq.put("notify",notify);
+			
+			//after payment success set redircetion 
+			paymentLinkReq.put("callback_url", "http://localhost:3000/payment/"+orderId);
+			paymentLinkReq.put("callback_Method","get");
+			
+			//create payment link
+			PaymentLink payment =razorpay.paymentLink.create(paymentLinkReq);
+			
+			String paymentLinkId=payment.get("id");
+			
+			String paymentLinkUrl=payment.get("short_url");
+			
+			PaymentLinkResponse res= new PaymentLinkResponse();
+			res.setPayment_link_id(paymentLinkId);
+			res.setPayment_link_url(paymentLinkUrl);
+			
+			return new ResponseEntity<PaymentLinkResponse>(res,HttpStatus.CREATED);
+			
+		}catch(Exception e) {
+			throw new RazorpayException(e.getMessage());
+			
+		}
+		
+	}
+	//method to change paymenet details and order status
+	public ResponseEntity<ApiResponse>updateOrderStatus(@RequestParam(name="payment_id")String paymentId, @RequestParam(name="order_id")Long orderId) throws RazorpayException, OrderException{
+		
+		OrderD order=orderService.findOrderById(orderId);
+		RazorpayClient razorpay=new RazorpayClient(apiKey, apiSecret);
+		try {
+			Payment payment= razorpay.payments.fetch(paymentId);
+			
+			if(payment.get("status").equals("captured")) {
+				order.getPaymentDetails().setPaymentId(paymentId);
+				order.getPaymentDetails().setStatus("COMPLETED");
+				order.setOrderStatus("Placed");
+				orderRepo.save(order);
+				
+			}
+			ApiResponse response=new ApiResponse();
+			response.setMessage("your order is Placed");
+			response.setBool(true);
+			return new ResponseEntity<ApiResponse>(response,HttpStatus.ACCEPTED);
+			
+		} catch (Exception e) {
+			throw new RazorpayException(e.getMessage());
+			
+		}
+	}
+	
+
+}

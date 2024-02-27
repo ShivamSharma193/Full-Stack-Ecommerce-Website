@@ -1,0 +1,11 @@
+1704916655381	Rename package 'com.example.demo'
+1704995571403	Rename package 'com.zosh.service'
+1704997723962	Delete element
+1705003038308	Rename package 'com.fashion_point.response'
+1705155373034	Delete element
+1705155833656	Rename type 'CartItemService'
+1705156480453	Rename type 'CardItemImpl'
+1705156763761	Rename type 'UserServiceImpl'
+1705176902632	Copy compilation unit
+1705176912386	Copy compilation unit
+1705177328883	Rename type 'Order'

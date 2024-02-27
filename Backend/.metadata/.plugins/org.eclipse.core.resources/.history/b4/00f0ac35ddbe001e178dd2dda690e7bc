@@ -1,0 +1,7 @@
+package com.fashion_point.config;
+
+public class JWTCosntant {
+	public static final String SECRET_KEY="adadwakjdkavcefjfjkfofhcxvbvxvbhh";//random and generatrd by me
+	public static final String JWT_HEADER="Authorization";
+
+}

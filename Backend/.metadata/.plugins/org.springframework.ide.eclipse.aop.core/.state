@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aop-reference-model>
+<aop-project name="fashion-point"/>
+<aop-project name="SpringBoot_Rest_Backend"/>
+</aop-reference-model>
