@@ -5,10 +5,7 @@ import jakarta.persistence.Column;
 //it is embedded 
 public class Size {
 	@Column(name="sizes")
-	private String size;
-	
-	private String quantity;
-	
+	private S
 	public Size() {
 		// TODO Auto-generated constructor stub
 	}
