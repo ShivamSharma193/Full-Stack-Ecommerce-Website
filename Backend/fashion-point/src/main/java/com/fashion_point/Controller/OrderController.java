@@ -40,7 +40,7 @@ public class OrderController {
 		
 		OrderD order=orderService.CreateOrder(user, shippingAddress);
 		System.out.println("order"+order);
-		return new ResponseEntity<> (order, HttpStatus.CREATED);
+		// return new ResponseEntity<> (order, HttpStatus.CREATED);
 	}
 	
 	@GetMapping("/{Id}")
@@ -50,7 +50,7 @@ public class OrderController {
 		
 		OrderD order=orderService.findOrderById(OrderId);
 		
-		return new ResponseEntity<> (order, HttpStatus.FOUND);
+		// return new ResponseEntity<> (order, HttpStatus.FOUND);
 			
 		
 	}
@@ -58,9 +58,9 @@ public class OrderController {
 	public ResponseEntity<List<OrderD>>userOrderHistory(@RequestHeader("Authorization") String JWT)throws UserException,OrderException{
 		
 		
-		User user=userService.findUserbyJWT(JWT);
+		// User user=userService.findUserbyJWT(JWT);
 		
-		List<OrderD>orders=orderService.usesOrderHistory(user.getId());
+		List<OrderD>orders=orderService.uy(user.getId());
 		
 		return new ResponseEntity<> (orders, HttpStatus.FOUND);
 		
